@@ -1,0 +1,26 @@
+{
+  "runtime": {
+    "version": "LuaJIT",
+    "special": {
+      "love.filesystem.load": "loadfile"
+    }
+  },
+  "diagnostics": {
+    "globals": [
+      "love"
+    ]
+  },
+  "runtime.special": {
+    "love.filesystem.load": "loadfile"
+  },
+  "workspace.checkThirdParty": false,
+  "workspace": {
+    "library": [
+      "${workspaceFolder}/.luacats/love2d/library"
+    ],
+    "ignoreDir": [
+      ".luacats"
+    ],
+    "checkThirdParty": "false"
+  }
+}
