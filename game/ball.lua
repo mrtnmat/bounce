@@ -1,15 +1,16 @@
 return function(x, y, radius)
-    local spinRate = 100
-    return {
+    local d =
+    {
         x = x,
         y = y,
         radius = radius,
         speed = {
-            x = 800,
-            y = 000,
+            x = 200,
+            y = 20,
         },
-        spinRate = spinRate,
-        angularVelocity = function() return spinRate / radius end,
-        rotation = 0
+        spinRate = 100,
+        rotation = 0,
     }
+    d.angularVelocity = function() return d.spinRate / radius end
+    return d
 end
