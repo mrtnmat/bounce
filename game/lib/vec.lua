@@ -25,7 +25,11 @@ return {
     return { x = -v.y, y = v.x }
   end,
 
-  from_segment = function(x1, x2, y1, y2)
+  from_segment = function(p1, p2)
+    return { x = p2.x - p1.x, y = p2.y - p1.y }
+  end,
+
+  from_segment2 = function(x1, x2, y1, y2)
     return { x = x2 - x1, y = y2 - y1 }
   end,
 }

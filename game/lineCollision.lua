@@ -39,8 +39,6 @@ end
 return function(ball, line, dt)
     local ballStart = { x = ball.x, y = ball.y }
     local ballEnd = { x = ball.x + (ball.speed.x * dt), y = ball.y + (ball.speed.y * dt) }
-    local lineStart = { x = line[1], y = line[2] }
-    local lineEnd = { x = line[3], y = line[4] }
-    local overlap, intersection, t = segmentsOverlap(ballStart, ballEnd, lineStart, lineEnd)
+    local overlap, intersection, t = segmentsOverlap(ballStart, ballEnd, line[1], line[2])
     return overlap, intersection, t
 end

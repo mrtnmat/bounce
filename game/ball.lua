@@ -5,8 +5,8 @@ return function(x, y, radius)
         y = y,
         radius = radius,
         speed = {
-            x = 200,
-            y = 20,
+            x = 800,
+            y = 100,
         },
         spinRate = 100,
         rotation = 0,
