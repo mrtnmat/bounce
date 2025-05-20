@@ -1,7 +1,8 @@
 require('debugger')
+local vec = require('lib.vec')
 local Ball = require('ball')
 local U = require('utils')
-local line = require('line')
+local line = { 100, 30, 250, 190 }
 local checkLineCollision = require('lineCollision')
 local mainBall = Ball(BASE_W / 2, BASE_H / 2, math.floor(BASE_H / 48))
 local font = love.graphics.newFont('fonts/JetBrainsMono-Regular.ttf')
@@ -88,8 +89,14 @@ love.update = function(dt)
     checkWallCollision(mainBall)
     local lineCollision, intersection, t = checkLineCollision(mainBall, line, dt)
     if lineCollision then
-        print("time: ", t)
-        print(inspect(intersection))
+        local n = vec.from_segment(unpack(line))
+        print(inspect(n))
+        local n1 = vec.normal(n)
+        print(inspect(n1))
+        local n2 = vec.normalize(n1)
+        print(inspect(n2))
+        local coll = calculateBounce(mainBall, n2)
+        print(inspect(coll))
     end
     mainBall.x = mainBall.x + mainBall.speed.x * dt
     mainBall.y = mainBall.y + mainBall.speed.y * dt
