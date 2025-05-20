@@ -1,8 +1,32 @@
 require('debugger')
 local Ball = require('ball')
 local U = require('utils')
+local line = require('line')
+local checkLineCollision = require('lineCollision')
 local mainBall = Ball(BASE_W / 2, BASE_H / 2, math.floor(BASE_H / 48))
 local font = love.graphics.newFont('fonts/JetBrainsMono-Regular.ttf')
+
+local function newBrick(x, y, width, height)
+    return {
+        x = x,
+        y = y,
+        width = width,
+        height = height,
+    }
+end
+
+local bricksList = {
+    newBrick(10, 10, 30, 10),
+    newBrick(50, 10, 30, 10),
+    newBrick(90, 10, 30, 10),
+}
+
+local function drawBricks(bricks)
+    for _, brick in ipairs(bricks) do
+        love.graphics.setColor(0.8, 0.2, 0)
+        love.graphics.rectangle("fill", brick.x, brick.y, brick.width, brick.height)
+    end
+end
 
 love.load = function()
     love.graphics.setFont(font)
@@ -35,7 +59,7 @@ local function calculateBounce(ball, wallNormal)
     ball.speed.y = -ballNormal.y + ballTangent.y
 end
 
-local function checkCollision(ball)
+local function checkWallCollision(ball)
     for _, wall in ipairs(walls) do
         local dx = ball.x - wall.pos
         local dy = ball.y - wall.pos
@@ -61,7 +85,12 @@ end
 
 local spinDecay = 0.20 -- percent per second
 love.update = function(dt)
-    checkCollision(mainBall)
+    checkWallCollision(mainBall)
+    local lineCollision, intersection, t = checkLineCollision(mainBall, line, dt)
+    if lineCollision then
+        print("time: ", t)
+        print(inspect(intersection))
+    end
     mainBall.x = mainBall.x + mainBall.speed.x * dt
     mainBall.y = mainBall.y + mainBall.speed.y * dt
     mainBall.rotation = mainBall.rotation + mainBall.angularVelocity() * dt
@@ -83,7 +112,7 @@ love.draw = function()
     love.graphics.setCanvas(GameCanvas)
     love.graphics.clear()
     love.graphics.setColor(1, 1, 1)
-    love.graphics.draw(BallImg, mainBall.x, mainBall.y, mainBall.rotation, 1, 1
+    love.graphics.draw(ballCanvas, mainBall.x, mainBall.y, mainBall.rotation, 1, 1
     , mainBall.radius -- ox
     , mainBall.radius -- oy
     )
@@ -91,6 +120,9 @@ love.draw = function()
     -- -- Screen walls
     -- love.graphics.setLineWidth( 20 )
     -- love.graphics.rectangle('line', 0, 0, BASE_W, BASE_H)
+    -- drawBricks(bricksList)
+
+    love.graphics.line(line)
 
     love.graphics.setCanvas()
     love.graphics.setColor(1, 1, 1)
