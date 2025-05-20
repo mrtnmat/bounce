@@ -1,7 +1,7 @@
 require('debugger')
 local Ball = require('ball')
 local U = require('utils')
-local mainBall = Ball(BASE_W / 2, BASE_H / 2, BASE_H / 48)
+local mainBall = Ball(BASE_W / 2, BASE_H / 2, math.floor(BASE_H / 48))
 local font = love.graphics.newFont('fonts/JetBrainsMono-Regular.ttf')
 
 love.load = function()
@@ -15,9 +15,9 @@ end
 
 local walls = {
     { normal = { x = 1, y = 0 },  pos = 0 },      -- LEFT WALL
-    { normal = { x = -1, y = 0 }, pos = PHYS_W }, -- RIGHT WALL
+    { normal = { x = -1, y = 0 }, pos = BASE_W }, -- RIGHT WALL
     { normal = { x = 0, y = 1 },  pos = 0 },      -- TOP WALL
-    { normal = { x = 0, y = -1 }, pos = PHYS_H }, -- BOTTOM WALL
+    { normal = { x = 0, y = -1 }, pos = BASE_H }, -- BOTTOM WALL
 }
 
 local function calculateBounce(ball, wallNormal)
