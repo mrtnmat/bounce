@@ -38,6 +38,8 @@ love.load = function()
   love.graphics.setDefaultFilter('linear', 'nearest')
 
   love.mouse.setGrabbed(true)
+  love.mouse.setVisible(false)
+  Background = love.graphics.newImage('sprite/background.png')
 end
 
 local walls = {
@@ -81,9 +83,10 @@ local function calculateBounce(ball, wallNormalOLD)
   end
 
   -- Increase ball speed slightly
-  local increment = (love.math.random() * 2 + 1)
-  ball.speed.x = ball.speed.x + (increment * sign(ball.speed.x))
-  ball.speed.y = ball.speed.y + (increment * sign(ball.speed.y))
+  local incrementX = (love.math.random() * 2 + 1)
+  local incrementY = (love.math.random() * 2 + 1)
+  ball.speed.x = ball.speed.x + (incrementX * sign(ball.speed.x))
+  ball.speed.y = ball.speed.y + (incrementY * sign(ball.speed.y))
 
   -- Increase spin slightly
   ball.spinRate = ball.spinRate + (love.math.random() * 15 - 4)
@@ -108,8 +111,9 @@ end
 
 local function printDebugInfo()
   love.graphics.setColor(1, 1, 1)
-  local output = string.format('speed: %d %d, spin: %d, rotation: %d', mainBall.speed.x, mainBall.speed.y,
-    mainBall.angularVelocity(), mainBall.rotation * 180 / math.pi)
+  local output = string.format('speed: %d %d, spin: %d, rotation: %d, ball (x: %d y: %d)', mainBall.speed.x,
+    mainBall.speed.y,
+    mainBall.angularVelocity(), mainBall.rotation * 180 / math.pi, mainBall.x, mainBall.y)
   love.graphics.print(output, 100, 100)
 end
 
@@ -137,27 +141,13 @@ local function check_gameover()
   return mainBall.y > BASE_H
 end
 
-local function gameover_message()
-  love.graphics.setColor(1, 0, 0)
-  love.graphics.setFont(font) -- assuming you have a font set up
-  local text = "GAME OVER LOSER"
-  local textWidth = love.graphics.getFont():getWidth(text)
-  love.graphics.print(
-    text,
-    love.graphics.getWidth() / 2 - (textWidth * 4) / 2,
-    love.graphics.getHeight() / 2 - 20,
-    0,
-    4,
-    4
-  )
-end
-
 local state = 'playing'
 
 love.update = function(dt)
   if check_gameover() then
     state = 'gameover'
     love.mouse.setGrabbed(false)
+    love.mouse.setVisible(true)
     return
   end
   move_paddle()
@@ -193,32 +183,57 @@ end
 local function circleWithoutCopying(radius)
   local circleCanvas = love.graphics.newCanvas(radius * 2, radius * 2)
   love.graphics.setCanvas(circleCanvas)
+  love.graphics.setColor(0.9, 0.4, 0)
   love.graphics.circle("fill", radius, radius, radius)
-  love.graphics.setColor(1, 0, 0)
-  love.graphics.line(-radius, radius, radius * 2, radius)
+  love.graphics.setColor(0.5, 0.2, 0)
+  love.graphics.rectangle('fill', radius - 3, radius - 3, 2, 2)
+  love.graphics.rectangle('fill', radius + 1, radius, 1, 1)
+  love.graphics.rectangle('fill', radius + 1, radius - 2, 1, 1)
+  -- love.graphics.line(-radius, radius, radius * 2, radius)
   return circleCanvas
 end
 
+local function gameover_message()
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.setFont(font) -- assuming you have a font set up
+  local text = "GAME OVER LOSER"
+  local textWidth = love.graphics.getFont():getWidth(text)
+  love.graphics.print(
+    text,
+    BASE_W / 2 - textWidth / 2,
+    BASE_H / 2 - 20
+  )
+end
+
+local function drawBackground()
+  love.graphics.clear()
+  if state == 'gameover' then
+    love.graphics.setColor(1, 0, 0)
+  else
+    love.graphics.setColor(1, 1, 1)
+  end
+  love.graphics.draw(Background, 0, 0, 0, 1 / SCALING_FACTOR, 1 / SCALING_FACTOR)
+end
+
 love.draw = function()
+  love.graphics.setCanvas(GameCanvas)
+  love.graphics.clear()
+  drawBackground()
   if state == 'gameover' then
     gameover_message()
   else
     local ballCanvas = circleWithoutCopying(mainBall.radius)
     love.graphics.setCanvas(GameCanvas)
-    love.graphics.clear()
     love.graphics.setColor(1, 1, 1)
     love.graphics.draw(ballCanvas, mainBall.x, mainBall.y, mainBall.rotation, 1, 1
     , mainBall.radius -- ox
     , mainBall.radius -- oy
     )
 
+    love.graphics.setColor(0, 0, 0)
     for _, line in ipairs(lines) do
       love.graphics.line(line[1].x, line[1].y, line[2].x, line[2].y)
     end
-
-    love.graphics.setCanvas()
-    love.graphics.setColor(1, 1, 1)
-    love.graphics.draw(GameCanvas, 0, 0, 0, DISPLAY_SCALE, DISPLAY_SCALE)
   end
 
 
@@ -226,6 +241,9 @@ love.draw = function()
   -- love.graphics.setLineWidth( 20 )
   -- love.graphics.rectangle('line', 0, 0, BASE_W, BASE_H)
   -- drawBricks(bricksList)
+  love.graphics.setCanvas()
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.draw(GameCanvas, 0, 0, 0, DISPLAY_SCALE, DISPLAY_SCALE)
 
 
   printDebugInfo()
