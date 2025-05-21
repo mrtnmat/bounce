@@ -2,7 +2,6 @@ require('debugger')
 local vec = require('lib.vec')
 local Ball = require('ball')
 local U = require('utils')
-local line = { 0, 0, 180, 180 }
 local check_line_collision = require('lineCollision')
 local mainBall = Ball(BASE_W / 40, BASE_H / 2, math.floor(BASE_H / 48))
 local font = love.graphics.newFont('fonts/JetBrainsMono-Regular.ttf')
@@ -35,7 +34,10 @@ love.load = function()
 
   GameCanvas = love.graphics.newCanvas(BASE_W, BASE_H)
 
-  love.graphics.setDefaultFilter('nearest', 'nearest')
+  -- love.graphics.setDefaultFilter('nearest', 'nearest')
+  love.graphics.setDefaultFilter('linear', 'nearest')
+
+  love.mouse.setGrabbed(true)
 end
 
 local walls = {
@@ -46,11 +48,15 @@ local walls = {
 }
 
 local walls2 = {
-  { { x = 0, y = 0 },           { x = BASE_W, y = 0 } },      -- TOP WALL
-  { { x = BASE_W, y = 0 },      { x = BASE_W, y = BASE_H } }, -- RIGHT WALL
-  { { x = BASE_W, y = BASE_H }, { x = 0, y = BASE_H } },      -- BOTTOM WALL
-  { { x = 0, y = BASE_H },      { x = 0, y = 0 } },           -- LEFT WALL
-  { { x = 0, y = 0, },          { x = 180, y = 180 } },       -- DIAGONAL WALL
+  { { x = 0, y = 0 },      { x = BASE_W, y = 0 } },      -- TOP WALL
+  { { x = BASE_W, y = 0 }, { x = BASE_W, y = BASE_H } }, -- RIGHT WALL
+  -- { { x = BASE_W, y = BASE_H }, { x = 0, y = BASE_H } },      -- BOTTOM WALL
+  { { x = 0, y = BASE_H }, { x = 0, y = 0 } },           -- LEFT WALL
+}
+
+local lines = {
+  -- { { x = 0, y = 0, },                         { x = 180, y = 180 } },                     -- DIAGONAL WALL
+  { { x = BASE_W / 2 - 20, y = BASE_H - 20, }, { x = BASE_W / 2 + 20, y = BASE_H - 20 } }, -- PADDLE
 }
 
 local function calculateBounce(ball, wallNormalOLD)
@@ -95,8 +101,7 @@ end
 
 local spinDecay = 0.05 -- percent per second
 
-local function check_all_collisions(dt)
-  local collidables = walls2
+local function check_all_collisions(collidables, dt)
   local collisions = {}
   for index, wall in ipairs(collidables) do
     local line_collision, intersection, t = check_line_collision(mainBall, wall, dt)
@@ -107,14 +112,52 @@ local function check_all_collisions(dt)
   return collisions
 end
 
+local function move_paddle()
+  local x = love.mouse.getX() / SCALING_FACTOR
+  print(inspect(lines[1]))
+  lines[1][1].x = x - 20
+  lines[1][2].x = x + 20
+end
+
+local function check_gameover()
+  return mainBall.y > BASE_H
+end
+
+local function gameover_message()
+  love.graphics.setColor(1, 0, 0)
+  love.graphics.setFont(font) -- assuming you have a font set up
+  local text = "GAME OVER LOSER"
+  local textWidth = love.graphics.getFont():getWidth(text)
+  love.graphics.print(
+    text,
+    love.graphics.getWidth() / 2 - (textWidth * 4) / 2,
+    love.graphics.getHeight() / 2 - 20,
+    0,
+    4,
+    4
+  )
+end
+
+local state = 'playing'
+
 love.update = function(dt)
+  if check_gameover() then
+    state = 'gameover'
+    return
+  end
+  move_paddle()
   -- check_wall_collision(mainBall)
-  local collisions = check_all_collisions(dt)
+  local collisions = check_all_collisions(walls2, dt)
   if #collisions > 0 then
-    print(inspect(collisions))
     local n1 = vec.from_segment(collisions[1][1], collisions[1][2])
     local n2 = vec.normalize(n1)
-    local coll = calculateBounce(mainBall, n2)
+    calculateBounce(mainBall, n2)
+  end
+  collisions = check_all_collisions(lines, dt)
+  if #collisions > 0 then
+    local n1 = vec.from_segment(collisions[1][1], collisions[1][2])
+    local n2 = vec.normalize(n1)
+    calculateBounce(mainBall, n2)
   end
   -- local line_collision, intersection, t = check_line_collision(mainBall, line, dt)
   -- if line_collision then
@@ -142,25 +185,33 @@ local function circleWithoutCopying(radius)
 end
 
 love.draw = function()
-  local ballCanvas = circleWithoutCopying(mainBall.radius)
-  love.graphics.setCanvas(GameCanvas)
-  love.graphics.clear()
-  love.graphics.setColor(1, 1, 1)
-  love.graphics.draw(ballCanvas, mainBall.x, mainBall.y, mainBall.rotation, 1, 1
-  , mainBall.radius -- ox
-  , mainBall.radius -- oy
-  )
+  if state == 'gameover' then
+    gameover_message()
+  else
+    local ballCanvas = circleWithoutCopying(mainBall.radius)
+    love.graphics.setCanvas(GameCanvas)
+    love.graphics.clear()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(ballCanvas, mainBall.x, mainBall.y, mainBall.rotation, 1, 1
+    , mainBall.radius -- ox
+    , mainBall.radius -- oy
+    )
+
+    for _, line in ipairs(lines) do
+      love.graphics.line(line[1].x, line[1].y, line[2].x, line[2].y)
+    end
+
+    love.graphics.setCanvas()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(GameCanvas, 0, 0, 0, DISPLAY_SCALE, DISPLAY_SCALE)
+  end
+
 
   -- -- Screen walls
   -- love.graphics.setLineWidth( 20 )
   -- love.graphics.rectangle('line', 0, 0, BASE_W, BASE_H)
   -- drawBricks(bricksList)
 
-  love.graphics.line(line)
-
-  love.graphics.setCanvas()
-  love.graphics.setColor(1, 1, 1)
-  love.graphics.draw(GameCanvas, 0, 0, 0, DISPLAY_SCALE, DISPLAY_SCALE)
 
   printDebugInfo()
 end
