@@ -73,6 +73,20 @@ local function calculateBounce(ball, wallNormalOLD)
   -- Recombine velocity components
   ball.speed.x = -ballNormal.x + ballTangent.x
   ball.speed.y = -ballNormal.y + ballTangent.y
+
+  local function sign(n)
+    if n == 0 then return 0 end
+    if n < 0 then return -1 end
+    return 1
+  end
+
+  -- Increase ball speed slightly
+  local increment = (love.math.random() * 2 + 1)
+  ball.speed.x = ball.speed.x + (increment * sign(ball.speed.x))
+  ball.speed.y = ball.speed.y + (increment * sign(ball.speed.y))
+
+  -- Increase spin slightly
+  ball.spinRate = ball.spinRate + (love.math.random() * 15 - 4)
 end
 
 local function check_wall_collision(ball)
@@ -143,6 +157,7 @@ local state = 'playing'
 love.update = function(dt)
   if check_gameover() then
     state = 'gameover'
+    love.mouse.setGrabbed(false)
     return
   end
   move_paddle()
